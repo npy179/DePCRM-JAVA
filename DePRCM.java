@@ -1,33 +1,36 @@
 import java.io.*;
 import java.lang.*;
+import java.util.regex.*;
 
 
 public class DePRCM{
 
     public static void main(String[] args){
 
-        File folder = new File("/home/npy/CelegansData");
-        File[] fileList = folder.listFiles();
+        File ParentFolder = new File("/projects/pni1/TFBSPeakData");
+        File[] folderList = ParentFolder.listFiles();
 
-        for (File file : fileList){
-            if (file.isFile()){
-                String filename = file.getName();
-                File fl = new File(filename);
 
-                String ofilename = filename.replace("GFF3","BED");
-                File ofl = new File(ofilename);
-
-                PeakExtension(fl,ofl);
-            }
-            else {
-
-            };
-        }
+	for(File folder:folderList){
+	    if(folder.isFile()){
+		
+		String path ="/projects/pni1/TFBSPeakData/";
+		String gffflname = folder.getName();
+		String flname = path+gffflname;
+		String bedname = gffflname.replace("GFF3","BED");
+		String oflname = path+"ExtendTFBSData/"+bedname;
+		//		System.out.println(flname);
+		File fl = new File(flname);
+		File ofl = new File(oflname);
+     		PeakExtension(fl,ofl);
+	    }
+	}
 
     }
 
     public static void PeakExtension(File file,File ofile){
        final int ExtPeakLen = 3000;
+       Pattern pt = Pattern.compile("^\\w+\\s.*");
 
 
         try{
@@ -40,41 +43,50 @@ public class DePRCM{
             String line = null;
             String title1 = br.readLine();String titlenew = "Bed format";bw.write(titlenew);bw.newLine();
             String title2 = br.readLine();bw.write(title2);bw.newLine();
-            while((line = br.readLine())!=null){
 
 
-                String delim = "\t";
-                String[] tokens = line.split(delim);
-                double StartPoint = Double.parseDouble(tokens[3]);
-                double EndPoint = Double.parseDouble(tokens[4]);
-
-                if((EndPoint-StartPoint)<5000){
-                    double MidPoint = Math.floor((StartPoint+EndPoint)/2);
-
-                    double EstartPoint = MidPoint - 1499;
-                    double EendPoint = MidPoint + 1501;
-
-                    tokens[3] = Double.toString(EstartPoint);
-                    tokens[4] = Double.toString(EendPoint);
+	    while((line = br.readLine())!=null){
 
 
-                    String Exline = tokens[0]+"\t"+tokens[1]+"\t"+tokens[2]+"\t"+tokens[3]+"\t"+tokens[4]+"\t"+tokens[5]+"\n";
-                    System.out.println(Exline);
-                    bw.write(Exline);
+		//		System.out.println("This is GFF");
+		//		System.out.println(line);
+                Matcher mc = pt.matcher(line);
+
+		if(mc.find()){
+		    String delim = "\t";
+		    String[] tokens = line.split(delim);
+		    
+		    double StartPoint = Double.parseDouble(tokens[3]);
+		    double EndPoint = Double.parseDouble(tokens[4]);
+
+		    if((EndPoint-StartPoint)<5000){
+			double MidPoint = Math.floor((StartPoint+EndPoint)/2);
+
+			double EstartPoint = MidPoint - 1499;
+			double EendPoint = MidPoint + 1501;
+
+			tokens[3] = Double.toString(EstartPoint);
+			tokens[4] = Double.toString(EendPoint);
 
 
-                }
-                else{
 
-                }
+			String Exline = tokens[0]+"\t"+tokens[1]+"\t"+tokens[2]+"\t"+tokens[3]+"\t"+tokens[4]+"\n";
+			//			System.out.println(Exline);
+			bw.write(Exline);
 
-            }
-            br.close();
-            bw.close();
+		    }
+		    else{
+
+		    }
+
+		}
 
 
+	    }
+	    br.close();
+	    bw.close();
         }catch(IOException e){
              e.printStackTrace();
-        }
+       }
     }
 }
